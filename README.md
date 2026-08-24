@@ -84,8 +84,8 @@ To try a local checkout, point `tui.json` at the file instead of the npm spec:
 
 Two equivalent paths — both run checks, build `dist/`, and publish to npm:
 
-- **Actions UI**: *Actions → Release → Run workflow* (on `main`), enter the version, e.g. `0.1.0`. The workflow bumps `package.json`, commits, tags `v<version>`, and publishes.
-- **Tag push**: bump `package.json`, commit, then `git tag v0.1.0 && git push origin main v0.1.0`.
+- **Actions UI**: *Actions → Release → Run workflow* (on `main`), pick **breaking / minor / bugfix**. The workflow opens a short-lived `release/vX.Y.Z` PR (satisfying protected-main rules like CodeQL), waits for it to merge, tags the merged commit, and publishes.
+- **Tag push**: bump `package.json` via a PR, then `git tag v0.1.0 && git push origin v0.1.0`.
 
 Publishing requires the `NPM_TOKEN` repository secret.
 
