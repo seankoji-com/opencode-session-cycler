@@ -142,8 +142,11 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
+      # Node 22 bundles npm 10.x; OIDC trusted publishing needs npm >= 11.5.1.
+      - run: npm install -g npm@latest
+
       - run: bun build src/index.ts --outdir dist --target bun
 
+      # No NODE_AUTH_TOKEN: npm authenticates via GitHub OIDC against the
+      # trusted publisher configured on npmjs.com (repo + this workflow file).
       - run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
