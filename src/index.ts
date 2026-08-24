@@ -14,8 +14,8 @@ export type SessionCyclerOptions = {
 }
 
 const DEFAULT_BINDINGS = {
-  next: "ctrl+pagedown",
-  previous: "ctrl+pageup",
+  next: "ctrl+right",
+  previous: "ctrl+left",
   last: "<leader>o",
 } as const
 
