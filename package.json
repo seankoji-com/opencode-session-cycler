@@ -1,0 +1,32 @@
+{
+  "name": "opencode-session-cycler",
+  "version": "0.1.0",
+  "description": "Next / previous / toggle-last session keybinds for the OpenCode TUI",
+  "type": "module",
+  "license": "MIT",
+  "author": "seankoji-com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seankoji-com/opencode-session-cycler.git"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "tui",
+    "session"
+  ],
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "build": "bun build src/index.ts --outdir dist --target bun"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.18.4",
+    "@types/bun": "^1.2.0",
+    "typescript": "^5.8.2"
+  }
+}
