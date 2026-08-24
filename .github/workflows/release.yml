@@ -20,15 +20,13 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
   id-token: write
-  pull-requests: write
 
 jobs:
   publish:
     # Skip the redundant tag-push run when the tag was just pushed by the
-    # dispatch path below (that push is attributed to github-actions[bot]).
-    if: github.event_name == 'workflow_dispatch' || github.actor != 'github-actions[bot]'
+    # dispatch path below (that push is attributed to seankoji-com-ci[bot]).
+    if: github.event_name == 'workflow_dispatch' || github.actor != 'seankoji-com-ci[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,26 +36,30 @@ jobs:
       - run: bun run typecheck
       - run: bun test
 
-      # Dispatch path: open a release/* PR (main requires merging via PR),
-      # merge it immediately via the org-admin bypass on the CodeQL-required
-      # ruleset (this repo runs no CodeQL, so normal PR flow can never
-      # satisfy it), then tag merged main and publish.
-      - name: Open release PR, merge via admin bypass, tag (workflow_dispatch)
+      - name: Generate seankoji-com-ci App token
+        if: github.event_name == 'workflow_dispatch'
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.SEANKOJI_CI_APP_ID }}
+          private-key: ${{ secrets.SEANKOJI_CI_PRIVATE_KEY }}
+          owner: seankoji-com
+          repositories: opencode-session-cycler
+
+      # Dispatch path: bump the version, push straight to main, tag, publish.
+      # seankoji-com-ci is an "always" bypass_actor on both org rulesets (the
+      # required-PR rule and the CodeQL-required rule this repo can never
+      # satisfy, since it runs no CodeQL) -- pushing directly as that App
+      # needs no branch/PR/merge dance. typecheck and test already ran above,
+      # so this isn't skipping real verification, just an unsatisfiable
+      # required check.
+      - name: Bump version, push to main, tag (workflow_dispatch)
         if: github.event_name == 'workflow_dispatch'
         env:
           BUMP: ${{ inputs.bump }}
-          # A PAT (secret RELEASE_PAT) makes the release PR author a real
-          # maintainer, so its workflow runs skip the "awaiting approval"
-          # gate that blocks github-actions[bot]-authored PRs. Falls back
-          # to the default token (PR checks will need one manual approve).
-          GH_TOKEN: ${{ secrets.RELEASE_PAT || github.token }}
-          HAS_PAT: ${{ secrets.RELEASE_PAT != '' }}
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
-
-          if [ "$HAS_PAT" != "true" ]; then
-            echo "::notice::RELEASE_PAT secret is not set — the release PR's checks will sit in 'awaiting approval' until you approve them once. Set RELEASE_PAT to make releases fully hands-off." >&2
-          fi
 
           if [ "$GITHUB_REF_NAME" != "main" ]; then
             echo "::error::Run the dispatch against the main branch." >&2
@@ -71,49 +73,18 @@ jobs:
             *) echo "::error::unknown release type '$BUMP'" >&2; exit 1 ;;
           esac
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "seankoji-com-ci[bot]"
+          git config user.email "288827119+seankoji-com-ci[bot]@users.noreply.github.com"
 
           RAW_VERSION="$(npm version "$LEVEL" --no-git-tag-version)" # e.g. "v0.2.0" or "0.2.0" depending on npm
           NEW_TAG="v${RAW_VERSION#v}"
-          BRANCH="release/$NEW_TAG"
 
-          COUNT="$(gh pr list --head "$BRANCH" --state open --json number --jq 'length')"
-          if [ "$COUNT" -eq 0 ]; then
-            git checkout -b "$BRANCH"
-            git commit -am "chore(release): $NEW_TAG"
-            git push origin "$BRANCH"
-            gh pr create --base main --head "$BRANCH" \
-              --title "chore(release): $NEW_TAG" \
-              --body "Automated release PR — version bump only. Merging triggers the npm publish."
-          fi
+          git commit -am "chore(release): $NEW_TAG"
 
-          PR_NUMBER="$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')"
-
-          # main requires merging via PR, and the org's CodeQL-required ruleset
-          # can never be satisfied here (this repo runs no CodeQL) -- an
-          # OrganizationAdmin/pull_request bypass_actor exists on that ruleset
-          # for exactly this. typecheck and test already ran earlier in this
-          # same job, so --admin isn't skipping real verification, just an
-          # unsatisfiable required check. This needs GH_TOKEN to belong to an
-          # org admin (RELEASE_PAT) -- the default github-actions[bot] token has
-          # no admin rights and this fails loudly rather than hanging if so.
-          if ! gh pr merge "$PR_NUMBER" --squash --delete-branch=false --admin; then
-            echo "::error::Could not merge release PR #$PR_NUMBER, even with --admin. If GH_TOKEN here is the default github-actions[bot] token (RELEASE_PAT secret not set), it has no admin rights to use for the bypass -- set RELEASE_PAT to an org admin's PAT, or merge #$PR_NUMBER manually." >&2
-            exit 1
-          fi
-
-          # Tag the squashed commit that actually landed on main.
-          git fetch origin main
-          git checkout -B main origin/main
-          ACTUAL="$(node -p "require('./package.json').version")"
-          EXPECTED="${NEW_TAG#v}"
-          if [ "$ACTUAL" != "$EXPECTED" ]; then
-            echo "::error::merged main reports version '$ACTUAL', expected '$EXPECTED'." >&2
-            exit 1
-          fi
+          REMOTE="https://x-access-token:${APP_TOKEN}@github.com/seankoji-com/opencode-session-cycler.git"
+          git push "$REMOTE" HEAD:main
           git tag "$NEW_TAG"
-          git push origin "$NEW_TAG"
+          git push "$REMOTE" "$NEW_TAG"
 
       - uses: actions/setup-node@v4
         with:
