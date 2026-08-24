@@ -1,5 +1,8 @@
 # opencode-session-cycler
 
+[![CI](https://github.com/seankoji-com/opencode-session-cycler/actions/workflows/ci.yml/badge.svg)](https://github.com/seankoji-com/opencode-session-cycler/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/seankoji-com/opencode-session-cycler/graph/badge.svg)](https://codecov.io/gh/seankoji-com/opencode-session-cycler)
+
 Next / previous / toggle-last session keybinds for the [OpenCode](https://opencode.ai) TUI — no session dialog required.
 
 OpenCode's TUI shows one session at a time. Switching means opening the session list (`<leader>l`) and picking, or pre-pinning up to 9 quick slots. This plugin adds what the editor-grade harnesses have: cycle through your recent sessions and flip back to whatever you were just reading.

@@ -1,0 +1,8 @@
+[test]
+# Reporters: text for humans/threshold enforcement, lcov for Codecov upload.
+coverageReporter = ["text", "lcov"]
+coverageDir = "coverage"
+coverageSkipTestFiles = true
+# Per-file thresholds. Lines are held at 100%; functions get headroom because
+# Bun counts synthetic class entries that cannot be "covered".
+coverageThreshold = { lines = 1.0, functions = 0.85 }
