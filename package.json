@@ -16,6 +16,10 @@
     "session"
   ],
   "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./tui": "./dist/index.js"
+  },
   "files": [
     "dist"
   ],
