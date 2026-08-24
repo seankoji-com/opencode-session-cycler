@@ -80,6 +80,7 @@ const tui: TuiPlugin = async (api, options) => {
 
     const target = list[stepIndex(list, from, delta)]
     if (!target) return toast("No session to jump to")
+    if (target.id === from) return toast("No other sessions")
     navigateTo(target, from)
   })
 

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { TuiPluginApi } from "@opencode-ai/plugin/tui"
 import plugin from "../src/index"
 import type { CyclerSession } from "../src/cycle"
+import pkg from "../package.json"
 
 const s = (id: string, updated: number, extra: Partial<CyclerSession> = {}): CyclerSession => ({
   id,
@@ -98,6 +99,16 @@ async function makeHarness(
 }
 
 describe("registration", () => {
+  test("package exposes a ./tui entrypoint (OpenCode loads TUI plugins via exports)", () => {
+    // OpenCode's TUI plugin loader resolves npm plugins via
+    // package.json exports["./tui"] and does NOT fall back to "main".
+    // A plugin without that export is silently skipped.
+    const exportsMap = (pkg as { exports?: Record<string, unknown> }).exports
+    expect(exportsMap).toBeDefined()
+    expect(exportsMap?.["./tui"]).toBe("./dist/index.js")
+    expect(exportsMap?.["."]).toBe("./dist/index.js")
+  })
+
   test("registers next / previous / last commands in order", async () => {
     const h = await makeHarness()
     expect(h.bindings.map((b) => b.cmd)).toEqual([
@@ -185,7 +196,7 @@ describe("next / previous navigation", () => {
     h.run("next")
     await flush()
     expect(h.navigations).toEqual([])
-    expect(h.toasts).toEqual([])
+    expect(h.toasts).toEqual(["No other sessions"])
   })
 })
 
