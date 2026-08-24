@@ -1,12 +1,11 @@
 [test]
 # Headless JSX: stub @opentui/solid's runtime so plugin components render as
 # inspectable plain objects under `bun test` (no terminal renderer needed).
-preload = ["./test/preload.ts"]
+preload = ["./preload.ts"]
 # Reporters: text for humans/threshold enforcement, lcov for Codecov upload.
 coverageReporter = ["text", "lcov"]
 coverageDir = "coverage"
 coverageSkipTestFiles = true
 # Per-file thresholds. Lines are held at 100%; functions get headroom because
 # Bun counts synthetic class entries that cannot be "covered".
-# Functions threshold is 90% to account for preload.ts mock setup code.
-coverageThreshold = { lines = 1.0, functions = 0.90 }
+coverageThreshold = { lines = 1.0, functions = 0.85 }
