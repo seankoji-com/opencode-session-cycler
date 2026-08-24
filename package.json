@@ -26,11 +26,18 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "build": "bun build src/index.ts --outdir dist --target bun"
+    "lint": "eslint .",
+    "build": "bun build src/index.ts --outdir dist --target bun --define process.env.NODE_ENV='\"production\"' --external @opencode-ai/plugin --external @opentui/core --external @opentui/solid --external solid-js"
+  },
+  "dependencies": {
+    "@opentui/solid": "0.4.5",
+    "solid-js": "1.9.12"
   },
   "devDependencies": {
     "@opencode-ai/plugin": "^1.18.4",
     "@types/bun": "^1.2.0",
-    "typescript": "^5.8.2"
+    "eslint": "^10.9.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.67.0"
   }
 }

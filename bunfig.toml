@@ -1,4 +1,7 @@
 [test]
+# Headless JSX: stub @opentui/solid's runtime so plugin components render as
+# inspectable plain objects under `bun test` (no terminal renderer needed).
+preload = ["./test/preload.ts"]
 # Reporters: text for humans/threshold enforcement, lcov for Codecov upload.
 coverageReporter = ["text", "lcov"]
 coverageDir = "coverage"
