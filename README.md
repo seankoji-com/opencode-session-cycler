@@ -11,7 +11,7 @@ OpenCode's TUI shows one session at a time. Switching means opening the session 
 - `alt+k` → previous session
 - `<leader>o` → toggle back to the last session you were on (Emacs `C-x o` style)
 
-All three are also registered in the command palette under **Session** (`Ctrl+P` → "Next/Previous/Toggle last session").
+Each action is registered as a keymap command (`session_cycler.next`, `session_cycler.previous`, `session_cycler.last`) — those ids are what the rebinding examples below hook into.
 
 ## Requirements
 
@@ -61,7 +61,15 @@ The defaults deliberately avoid `ctrl+left` / `ctrl+right`: OpenCode core binds 
 - **Order** — sessions sorted by most recently updated, wrapping at both ends.
 - **Scope** — child/subagent sessions never appear in the cycle. When you're inside a session, cycling stays within that session's project so you don't land in another directory's work.
 - **Toggle-last** — tracks the previous session in memory only; it resets when the TUI restarts. External navigation (picking from the session dialog, quick slots, launching with `--session`) is detected correctly: after you hand-navigate somewhere, `<leader>o` takes you back to where you were before that.
-- **Feedback** — a brief toast names the session you landed on; empty states ("No sessions yet", "No previous session") toast instead of failing silently.
+- **Feedback** — a brief toast names the session you landed on; empty states toast instead of failing silently ("No sessions yet", "No previous session", "Previous session is gone", and "No other sessions" when the current project has only one session).
+
+## Troubleshooting
+
+**Keys do nothing**
+
+- **macOS** — use the *left* Option key (see the note above); right-Option composes characters like `∆` instead of sending Alt.
+- **Stale cache** — OpenCode resolves `@latest` once and caches it. Check `~/.cache/opencode/packages/opencode-session-cycler@latest/node_modules/opencode-session-cycler/package.json` matches the latest published version; if not, delete that directory and restart OpenCode to force a re-resolve.
+- **Single-session project** — with only one session in scope there's nothing to cycle to; you'll get a "No other sessions" toast.
 
 ## Why a plugin?
 
@@ -82,6 +90,8 @@ To try a local checkout, point `tui.json` at the file instead of the npm spec:
   "plugin": ["/absolute/path/to/opencode-session-cycler/src/index.ts"]
 }
 ```
+
+**Packaging note:** OpenCode resolves npm TUI plugins exclusively through `package.json` `exports["./tui"]` — it does not fall back to `"main"` (that fallback exists only for server plugins). A TUI package without the export is silently skipped at load. Both `.` and `./tui` must point at `dist/index.js`; a regression test in `test/index.test.ts` guards this.
 
 ## Releasing
 
