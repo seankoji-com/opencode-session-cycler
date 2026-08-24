@@ -1,6 +1,6 @@
 {
   "name": "opencode-session-cycler",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Next / previous / toggle-last session keybinds for the OpenCode TUI",
   "type": "module",
   "license": "MIT",
