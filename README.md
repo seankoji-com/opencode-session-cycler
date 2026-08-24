@@ -4,8 +4,8 @@ Next / previous / toggle-last session keybinds for the [OpenCode](https://openco
 
 OpenCode's TUI shows one session at a time. Switching means opening the session list (`<leader>l`) and picking, or pre-pinning up to 9 quick slots. This plugin adds what the editor-grade harnesses have: cycle through your recent sessions and flip back to whatever you were just reading.
 
-- `ctrl+pagedown` → next session (most-recently-updated first)
-- `ctrl+pageup` → previous session
+- `ctrl+right` → next session (most-recently-updated first)
+- `ctrl+left` → previous session
 - `<leader>o` → toggle back to the last session you were on (Emacs `C-x o` style)
 
 All three are also registered in the command palette under **Session** (`Ctrl+P` → "Next/Previous/Toggle last session").
@@ -50,6 +50,8 @@ Either pass options via the tuple form:
 ```
 
 The defaults deliberately avoid `[` / `]`, which need Option on non-US Mac layouts.
+
+> **macOS note:** `ctrl+left` / `ctrl+right` default to "move between Spaces" in Mission Control. If cycling does nothing, disable those under **System Settings → Keyboard → Keyboard Shortcuts → Mission Control**, or rebind the plugin to something else.
 
 ## Behavior
 
