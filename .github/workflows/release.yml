@@ -45,9 +45,18 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         env:
           BUMP: ${{ inputs.bump }}
-          GH_TOKEN: ${{ github.token }}
+          # A PAT (secret RELEASE_PAT) makes the release PR author a real
+          # maintainer, so its workflow runs skip the "awaiting approval"
+          # gate that blocks github-actions[bot]-authored PRs. Falls back
+          # to the default token (PR checks will need one manual approve).
+          GH_TOKEN: ${{ secrets.RELEASE_PAT || github.token }}
+          HAS_PAT: ${{ secrets.RELEASE_PAT != '' }}
         run: |
           set -euo pipefail
+
+          if [ "$HAS_PAT" != "true" ]; then
+            echo "::notice::RELEASE_PAT secret is not set — the release PR's checks will sit in 'awaiting approval' until you approve them once. Set RELEASE_PAT to make releases fully hands-off." >&2
+          fi
 
           if [ "$GITHUB_REF_NAME" != "main" ]; then
             echo "::error::Run the dispatch against the main branch." >&2
