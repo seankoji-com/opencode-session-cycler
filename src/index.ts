@@ -14,8 +14,8 @@ export type SessionCyclerOptions = {
 }
 
 const DEFAULT_BINDINGS = {
-  next: "ctrl+right",
-  previous: "ctrl+left",
+  next: "alt+j",
+  previous: "alt+k",
   last: "<leader>o",
 } as const
 

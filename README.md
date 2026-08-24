@@ -4,8 +4,8 @@ Next / previous / toggle-last session keybinds for the [OpenCode](https://openco
 
 OpenCode's TUI shows one session at a time. Switching means opening the session list (`<leader>l`) and picking, or pre-pinning up to 9 quick slots. This plugin adds what the editor-grade harnesses have: cycle through your recent sessions and flip back to whatever you were just reading.
 
-- `ctrl+right` → next session (most-recently-updated first)
-- `ctrl+left` → previous session
+- `alt+j` → next session (most-recently-updated first)
+- `alt+k` → previous session
 - `<leader>o` → toggle back to the last session you were on (Emacs `C-x o` style)
 
 All three are also registered in the command palette under **Session** (`Ctrl+P` → "Next/Previous/Toggle last session").
@@ -33,7 +33,7 @@ Either pass options via the tuple form:
 
 ```json
 {
-  "plugin": [["opencode-session-cycler", { "bindings": { "next": "alt+j", "previous": "alt+k" } }]]
+  "plugin": [["opencode-session-cycler", { "bindings": { "next": "alt+n", "previous": "alt+p" } }]]
 }
 ```
 
@@ -49,9 +49,9 @@ Either pass options via the tuple form:
 }
 ```
 
-The defaults deliberately avoid `[` / `]`, which need Option on non-US Mac layouts.
+The defaults deliberately avoid `ctrl+left` / `ctrl+right`: OpenCode core binds those to word-wise cursor movement in the prompt input (`input_word_backward` / `input_word_forward`), and the input editor consumes the keypress before plugin keymap layers see it.
 
-> **macOS note:** `ctrl+left` / `ctrl+right` default to "move between Spaces" in Mission Control. If cycling does nothing, disable those under **System Settings → Keyboard → Keyboard Shortcuts → Mission Control**, or rebind the plugin to something else.
+> **macOS note:** use the **left** Option key. WezTerm-style setups treat left-alt as a meta/escape prefix, while right-alt composes special characters.
 
 ## Behavior
 
