@@ -1,5 +1,6 @@
 import type { TuiPlugin, TuiPluginModule } from "@opencode-ai/plugin/tui"
 import { cycleList, LastSessionTracker, stepIndex, type CyclerSession } from "./cycle"
+import { registerSidebar } from "./sidebar"
 
 export type SessionCyclerOptions = {
   /**
@@ -10,6 +11,8 @@ export type SessionCyclerOptions = {
     next?: string
     previous?: string
     last?: string
+    /** Toggle the sessions sidebar widget (also clickable via its header). */
+    sidebar?: string
   }
 }
 
@@ -17,12 +20,15 @@ const DEFAULT_BINDINGS = {
   next: "alt+j",
   previous: "alt+k",
   last: "<leader>o",
+  // NOT <leader>s: core claims it for status_view. alt+s is unclaimed.
+  sidebar: "alt+s",
 } as const
 
 const COMMANDS = {
   next: "session_cycler.next",
   previous: "session_cycler.previous",
   last: "session_cycler.last",
+  sidebar: "session_cycler.sidebar",
 } as const
 
 const tui: TuiPlugin = async (api, options) => {
@@ -96,6 +102,16 @@ const tui: TuiPlugin = async (api, options) => {
     navigateTo(target, from)
   })
 
+  // The sidebar widget shares the collapsed state with the keybind below, so
+  // `<leader>s` and clicking the widget header toggle the same thing.
+  let sidebarToggle: (() => boolean) | undefined
+  try {
+    const store = registerSidebar(api)
+    sidebarToggle = store?.toggle
+  } catch {
+    // A broken slot registration must not take the keybinds down with it.
+  }
+
   api.keymap.registerLayer({
     mode: "base",
     commands: [
@@ -120,11 +136,22 @@ const tui: TuiPlugin = async (api, options) => {
         namespace: "palette",
         run: () => void toggleLast(),
       },
+      {
+        name: COMMANDS.sidebar,
+        title: "Toggle sessions sidebar",
+        category: "Session",
+        namespace: "palette",
+        run: () => {
+          if (!sidebarToggle) return toast("Sidebar unavailable")
+          toast(sidebarToggle() ? "Sessions hidden" : "Sessions shown")
+        },
+      },
     ],
     bindings: [
       { key: opts.bindings?.next ?? DEFAULT_BINDINGS.next, cmd: COMMANDS.next, desc: "Next session" },
       { key: opts.bindings?.previous ?? DEFAULT_BINDINGS.previous, cmd: COMMANDS.previous, desc: "Previous session" },
       { key: opts.bindings?.last ?? DEFAULT_BINDINGS.last, cmd: COMMANDS.last, desc: "Toggle last session" },
+      { key: opts.bindings?.sidebar ?? DEFAULT_BINDINGS.sidebar, cmd: COMMANDS.sidebar, desc: "Toggle sessions sidebar" },
     ],
   })
 }
