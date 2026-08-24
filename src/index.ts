@@ -61,26 +61,27 @@ const tui: TuiPlugin = async (api, options) => {
     toast(target.title || target.id)
   }
 
-  const guard = (fn: () => Promise<void>) => () => {
-    if (inFlight) return
-    inFlight = true
-    fn().finally(() => {
-      inFlight = false
-    })
+  const guard = <Args>(fn: (...args: Args[]) => Promise<void>) => {
+    return (...args: Args[]) => {
+      if (inFlight) return
+      inFlight = true
+      fn(...args).finally(() => {
+        inFlight = false
+      })
+    }
   }
 
-  const cycle = (delta: 1 | -1) =>
-    guard(async () => {
-      const from = currentSessionID()
-      tracker.observe(from)
+  const cycle = guard(async (delta: 1 | -1) => {
+    const from = currentSessionID()
+    tracker.observe(from)
 
-      const list = cycleList(await recentSessions(), anchorProjectID())
-      if (list.length === 0) return toast("No sessions yet")
+    const list = cycleList(await recentSessions(), anchorProjectID())
+    if (list.length === 0) return toast("No sessions yet")
 
-      const target = list[stepIndex(list, from, delta)]
-      if (!target) return toast("No session to jump to")
-      navigateTo(target, from)
-    })
+    const target = list[stepIndex(list, from, delta)]
+    if (!target) return toast("No session to jump to")
+    navigateTo(target, from)
+  })
 
   const toggleLast = guard(async () => {
     const from = currentSessionID()
