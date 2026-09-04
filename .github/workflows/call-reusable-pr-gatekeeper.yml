@@ -13,13 +13,13 @@ on:
   # used at all — GitHub suppresses both for any head SHA that ran an Actions
   # workflow, which is every PR here.
   workflow_run:
-    workflows: ['*']
+    workflows: ["*"]
     types: [completed]
   # The reconciler's path, for a PR the event route never noticed.
   workflow_dispatch:
     inputs:
       head_sha:
-        description: 'Commit SHA to evaluate and report the gate against.'
+        description: "Commit SHA to evaluate and report the gate against."
         required: true
         type: string
 
