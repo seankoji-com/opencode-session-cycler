@@ -6,7 +6,7 @@ Guidance for agents working in this repo. Read this before changing code.
 
 `opencode-session-cycler` — an OpenCode TUI plugin (npm) providing session
 cycling keybinds (`alt+j` / `alt+k` / `<leader>o`) and a collapsible
-**Sessions (N)** sidebar widget (`<leader>s`). Ships as compiled JS via
+**Sessions (N)** sidebar widget (`alt+s`). Ships as compiled JS via
 `exports["./tui"]`; released through `.github/workflows/release.yml`.
 
 ## Commands
