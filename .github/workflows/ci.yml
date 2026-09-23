@@ -8,9 +8,10 @@ on:
 permissions:
   contents: read
 
+# Superseded PR heads may cancel; every default-branch run keeps its own slot.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check:
@@ -23,9 +24,7 @@ jobs:
       - run: bun run lint
       - run: bun run typecheck
       - run: bun test --coverage
-      - run: bun run build
-      - run: test -s dist/index.js
-      - run: npm pack --dry-run
+      - run: bun run build:verify
       - uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
         with:
           files: coverage/lcov.info

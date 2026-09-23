@@ -29,7 +29,7 @@ jobs:
     # dispatch path below (that push is attributed to seankoji-com-ci[bot]).
     if: github.event_name == 'workflow_dispatch' || github.actor != 'seankoji-com-ci[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -38,6 +38,38 @@ jobs:
       - run: bun run lint
       - run: bun run typecheck
       - run: bun test
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Install the tested npm publishing version
+        run: npm install -g npm@11.5.1
+
+      - name: Prepare the version locally
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_REF_NAME" != "main" ]; then
+            echo "::error::Run the dispatch against the main branch." >&2
+            exit 1
+          fi
+          case "$BUMP" in
+            breaking) LEVEL="major" ;;
+            minor) LEVEL="minor" ;;
+            bugfix) LEVEL="patch" ;;
+            *) echo "::error::unknown release type '$BUMP'" >&2; exit 1 ;;
+          esac
+          RAW_VERSION="$(npm version "$LEVEL" --no-git-tag-version)"
+          echo "NEW_TAG=v${RAW_VERSION#v}" >> "$GITHUB_ENV"
+
+      - name: Build and verify the package before any remote write
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || '' }}
+        run: bun run build:verify
 
       - name: Generate seankoji-com-ci App token
         if: github.event_name == 'workflow_dispatch'
@@ -49,57 +81,19 @@ jobs:
           owner: seankoji-com
           repositories: opencode-session-cycler
 
-      # Dispatch path: bump the version, push straight to main, tag, publish.
-      # seankoji-com-ci is an "always" bypass_actor on both org rulesets (the
-      # required-PR rule and the CodeQL-required rule this repo can never
-      # satisfy, since it runs no CodeQL) -- pushing directly as that App
-      # needs no branch/PR/merge dance. typecheck and test already ran above,
-      # so this isn't skipping real verification, just an unsatisfiable
-      # required check.
-      - name: Bump version, push to main, tag (workflow_dispatch)
+      # All local validation has passed. Push commit and tag atomically.
+      - name: Push the prepared release
         if: github.event_name == 'workflow_dispatch'
         env:
-          BUMP: ${{ inputs.bump }}
           APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
-
-          if [ "$GITHUB_REF_NAME" != "main" ]; then
-            echo "::error::Run the dispatch against the main branch." >&2
-            exit 1
-          fi
-
-          case "$BUMP" in
-            breaking) LEVEL="major" ;;
-            minor)    LEVEL="minor" ;;
-            bugfix)   LEVEL="patch" ;;
-            *) echo "::error::unknown release type '$BUMP'" >&2; exit 1 ;;
-          esac
-
           git config user.name "seankoji-com-ci[bot]"
           git config user.email "288827119+seankoji-com-ci[bot]@users.noreply.github.com"
-
-          RAW_VERSION="$(npm version "$LEVEL" --no-git-tag-version)" # e.g. "v0.2.0" or "0.2.0" depending on npm
-          NEW_TAG="v${RAW_VERSION#v}"
-
           git commit -am "chore(release): $NEW_TAG"
-
-          REMOTE="https://x-access-token:${APP_TOKEN}@github.com/seankoji-com/opencode-session-cycler.git"
-          git push "$REMOTE" HEAD:main
           git tag "$NEW_TAG"
-          git push "$REMOTE" "$NEW_TAG"
+          REMOTE="https://x-access-token:${APP_TOKEN}@github.com/seankoji-com/opencode-session-cycler.git"
+          git push --atomic "$REMOTE" HEAD:main "refs/tags/$NEW_TAG"
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
-
-      # Node 22 bundles npm 10.x; OIDC trusted publishing needs npm >= 11.5.1.
-      - run: npm install -g npm@latest
-
-      - run: bun run build
-      - run: npm pack --dry-run
-
-      # No NODE_AUTH_TOKEN: npm authenticates via GitHub OIDC against the
-      # trusted publisher configured on npmjs.com (repo + this workflow file).
       - run: npm publish --access public --provenance
+
