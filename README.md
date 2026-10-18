@@ -123,12 +123,14 @@ To try a local checkout, point `tui.json` at the file instead of the npm spec:
 
 ## Releasing
 
-Two equivalent paths — both run checks, build `dist/`, and publish to npm:
+Both paths run checks, build and verify the packed package, and publish to npm:
 
-- **Actions UI**: *Actions → Release → Run workflow* (on `main`), pick **breaking / minor / bugfix**. The workflow opens a short-lived `release/vX.Y.Z` PR (satisfying protected-main rules like CodeQL), waits for it to merge, tags the merged commit, and publishes.
+- **Actions UI**: *Actions → Release → Run workflow* (on `main`), pick **breaking / minor / bugfix**. The workflow runs checks, prepares the version locally, and verifies the package before pushing the version commit and tag together in one atomic push to `main`. It then publishes to npm.
 - **Tag push**: bump `package.json` via a PR, then `git tag v0.1.0 && git push origin v0.1.0`.
 
-Publishing uses npm trusted publishing (OIDC): the workflow's `id-token: write` permission plus the trusted publisher configured on the npm package (repo `seankoji-com/opencode-session-cycler`, workflow `release.yml`) replace any stored token. For fully hands-off releases, add a `RELEASE_PAT` secret (a PAT with repo contents + pull-request write): the release PR is then authored by you, so its checks skip GitHub's "workflow awaiting approval" gate that applies to bot-authored PRs. Without it, each release PR needs one manual "Approve and run" click.
+The Actions UI path uses the repository's CI GitHub App token for the commit and tag push. Repository rules must allow that push; a rejected push stops the job before publishing.
+
+Publishing uses npm trusted publishing (OIDC): the workflow's `id-token: write` permission plus the trusted publisher configured on the npm package (repo `seankoji-com/opencode-session-cycler`, workflow `release.yml`) replace a stored npm token.
 
 ## License
 
