@@ -19,10 +19,13 @@ export type WidgetStatus = "idle" | "busy" | "retry" | undefined
 export type PreviewMessage = {
   id?: string
   role?: string
+  type?: string
   time?: { created?: number }
   error?: unknown
   /** UserMessage carries {title?,body?}; AssistantMessage carries boolean. */
   summary?: unknown
+  text?: string
+  content?: ReadonlyArray<PreviewPart>
 }
 
 /** A text part-like shape: only what preview extraction needs. */
@@ -71,7 +74,9 @@ export function statusEmoji(status: WidgetStatus): string {
  * payload). Tolerates any error shape — presence is what matters.
  */
 export function isFailedMessage(message: PreviewMessage | undefined): boolean {
-  if (!message || message.role !== "assistant") return false
+  if (!message) return false
+  const isAssistant = message.role === "assistant" || message.type === "assistant"
+  if (!isAssistant) return false
   return message.error != null
 }
 
@@ -108,7 +113,7 @@ function summaryText(summary: unknown): string {
  * Returns "" when nothing human-readable exists yet.
  */
 export function messageText(message: PreviewMessage, partsFor: (messageID: string) => ReadonlyArray<PreviewPart>): string {
-  const parts = message.id ? partsFor(message.id) : []
+  const parts = message.content ?? (message.id ? partsFor(message.id) : [])
   const text = parts
     .filter((p) => p.type === "text" && !p.synthetic && !p.ignored && typeof p.text === "string")
     .map((p) => p.text ?? "")
@@ -116,6 +121,9 @@ export function messageText(message: PreviewMessage, partsFor: (messageID: strin
     .replace(/\s+/g, " ")
     .trim()
   if (text.length > 0) return text
+  if (typeof message.text === "string" && message.text.trim().length > 0) {
+    return message.text.replace(/\s+/g, " ").trim()
+  }
   return summaryText(message.summary)
 }
 

@@ -27,7 +27,7 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "build": "bun build src/index.ts --outdir dist --target bun --define process.env.NODE_ENV='\"production\"' --external @opencode-ai/plugin --external @opentui/core --external @opentui/solid --external solid-js",
+    "build": "bun build src/index.ts --outdir dist --target bun --define process.env.NODE_ENV=\"\\\"production\\\"\" --external @opencode-ai/plugin --external @opencode/plugin --external @opentui/core --external @opentui/solid --external solid-js",
     "build:verify": "bun run build && node scripts/verify-package.mjs"
   },
   "dependencies": {
@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@opencode-ai/plugin": "^1.18.4",
+    "@opencode/plugin": "^2.0.32",
     "@types/bun": "^1.2.0",
     "eslint": "^10.9.0",
     "typescript": "^5.8.2",

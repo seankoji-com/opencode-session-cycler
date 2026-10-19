@@ -16,15 +16,23 @@ Each action is registered as a keymap command (`session_cycler.next`, `session_c
 
 ## Requirements
 
-OpenCode ≥ 1.18 (TUI plugin API).
+OpenCode ≥ 1.18 (compatible with OpenCode 1.x and OpenCode 2.x V2 TUI plugin runtime).
 
 ## Install
 
-Add to `~/.config/opencode/tui.json`:
+For OpenCode 1.x, add to `~/.config/opencode/tui.json`:
 
 ```json
 {
   "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["opencode-session-cycler"]
+}
+```
+
+For OpenCode 2.x, configure in `~/.config/opencode/opencode.json` (or `tui.json`):
+
+```json
+{
   "plugin": ["opencode-session-cycler"]
 }
 ```
@@ -119,7 +127,7 @@ To try a local checkout, point `tui.json` at the file instead of the npm spec:
 
 **Packaging note:** OpenCode resolves npm TUI plugins exclusively through `package.json` `exports["./tui"]` — it does not fall back to `"main"` (that fallback exists only for server plugins). A TUI package without the export is silently skipped at load. Both `.` and `./tui` must point at `dist/index.js`; a regression test in `test/index.test.ts` guards this.
 
-**JSX pipeline:** the sidebar view is Solid JSX (`src/sidebar.tsx`) compiled by Bun's automatic transform against `@opentui/solid/jsx-runtime` (see `tsconfig.json` `jsx` / `jsxImportSource`). The build externalizes `@opentui/*`, `solid-js`, and `@opencode-ai/plugin` — they ship as real dependencies and resolve through the package's own `node_modules` when OpenCode installs it — and defines `NODE_ENV=production` so the dev JSX runtime doesn't leak into the bundle. Under `bun test`, `test/preload.ts` stubs the jsx-runtime so components render as plain inspectable objects without a terminal renderer.
+**JSX pipeline:** the sidebar view is Solid JSX (`src/sidebar.tsx`) compiled by Bun's automatic transform against `@opentui/solid/jsx-runtime` (see `tsconfig.json` `jsx` / `jsxImportSource`). The build externalizes `@opentui/*`, `solid-js`, `@opencode-ai/plugin`, and `@opencode/plugin` — they ship as real dependencies and resolve through the package's own `node_modules` when OpenCode installs it — and defines `NODE_ENV=production` so the dev JSX runtime doesn't leak into the bundle. Under `bun test`, `test/preload.ts` stubs the jsx-runtime so components render as plain inspectable objects without a terminal renderer.
 
 ## Releasing
 
