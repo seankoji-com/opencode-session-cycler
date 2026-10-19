@@ -69,6 +69,11 @@ describe("statusEmoji", () => {
 })
 
 describe("isFailedMessage", () => {
+  test("assistant message with type assistant and error", () => {
+    expect(isFailedMessage({ type: "assistant", error: { name: "ApiError" } })).toBe(true)
+    expect(isFailedMessage({ type: "assistant" })).toBe(false)
+    expect(isFailedMessage({ type: "user", error: { name: "ApiError" } })).toBe(false)
+  })
   test("assistant message with error payload", () => {
     expect(isFailedMessage({ role: "assistant", error: { name: "UnknownError" } })).toBe(true)
   })
@@ -107,6 +112,10 @@ describe("newestMessage", () => {
 const noParts = (): ReadonlyArray<PreviewPart> => []
 
 describe("messageText", () => {
+  test("falls back to direct message.text when present", () => {
+    expect(messageText({ text: "  hello from v2  " }, () => [])).toBe("hello from v2")
+    expect(messageText({ text: "   " }, () => [])).toBe("")
+  })
   test("joins multiple text parts", () => {
     const parts: PreviewPart[] = [
       { type: "text", text: "hello" },
